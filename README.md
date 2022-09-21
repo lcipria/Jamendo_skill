@@ -1,3 +1,4 @@
-# Parrot_skill
+# Jamendo_skill
 
-Skill di esempio, con un solo intent, capace di accettare una frase (variabile) in input e ripeterla in output
+Ask Mycroft about songs and artists on Jamendo.
+Maybe play music in the future?
