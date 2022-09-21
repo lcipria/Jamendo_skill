@@ -1,0 +1,17 @@
+{
+  "skillMetadata": {
+    "sections": [
+      {
+        "name": "Jamendo Api",
+        "fields": [
+          {
+            "name": "client_id",
+            "type": "text",
+            "label": "A Client Id provided by devportal.jamendo.com",
+            "value": "6750d21f"
+          }
+        ]
+      }
+    ]
+  }
+}
