@@ -107,12 +107,11 @@ class Jamendo_skill(MycroftSkill):
     @intent_handler('search_artists_albums.intent')
     def search_artists_albums(self, message):
         artist_name = message.data.get('artist_name')
-        r = self.__get_artists_albums__({'limit': 'all', 'name': artist_name})
-        albums = [ album.get('name') for artist in r.get('results') for album in artist.get('albums') ]
+        albums = [ album.get('name') for album in self.__get_albums__({'artist_name': artist_name, 'limit': 'all'}).get('results') ]
         if albums:
             self.speak_dialog('search_artists_albums', {
                 'artist_name': artist_name,
-                'list' : join_list(albums, 'and')
+                'list': join_list(albums, 'and')
                 })
         else:
             self.speak_dialog('no_artists_albums', {
@@ -122,22 +121,30 @@ class Jamendo_skill(MycroftSkill):
     @intent_handler('search_artists_best_albums.intent')
     def search_artists_best_albums(self, message):
         artist_name = message.data.get('artist_name')
-        reviews = {}
-        # forse sarebbe meglio contare i like?
-        for album in [ album for artist in self.__get_artists_albums__({'limit': 'all', 'name': artist_name}).get('results') for album in artist.get('albums') ]:
-            if album_reviews := self.__get_reviews_albums__({'album_id': album.get('id'), 'hasscore': 1, 'limit': 'all'}).get('results'):
-                reviews[album.get('name')] = statistics.mean([ float(x.get('score')) for x in album_reviews ])
-
-        bests = sorted(reviews.items(), key=operator.itemgetter(1), reverse=True)[:5]
-        if bests:
+        albums = [ album.get('name') for album in self.__get_albums__({'artist_name': artist_name, 'limit': 5, 'order': 'popularity_total'}).get('results') ]
+        if albums:
             self.speak_dialog('search_artists_best_albums', {
                 'artist_name': artist_name,
-                'count': len(bests),
-                'list' : join_list([ x[0] for x in bests ], 'and')
+                'count': len(albums),
+                'list': join_list(albums, 'and')
                 })
         else:
-            # in realtà sarebbe "nessun album con recensioni con punteggio"
             self.speak_dialog('no_artists_albums', {
+                'artist_name': artist_name
+                })
+
+    @intent_handler('search_artists_best_tracks.intent')
+    def search_artists_best_tracks(self, message):
+        artist_name = message.data.get('artist_name')
+        tracks = [ track.get('name') for track in self.__get_tracks__({'artist_name': artist_name, 'limit': 5, 'order': 'popularity_total'}).get('results') ]
+        if tracks:
+            self.speak_dialog('search_artists_best_tracks', {
+                'artist_name': artist_name,
+                'count': len(tracks),
+                'list': join_list(tracks, 'and')
+                })
+        else:
+            self.speak_dialog('no_artists_tracks', {
                 'artist_name': artist_name
                 })
 
