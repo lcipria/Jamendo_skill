@@ -148,5 +148,28 @@ class Jamendo_skill(MycroftSkill):
                 'artist_name': artist_name
                 })
 
+    @intent_handler('search_artists_tags.intent')
+    def search_artists_tags(self, message):
+        artist_name = message.data.get('artist_name')
+        tags = [ tags for artist in self.__get_artists_musicinfo__({'artist_name': artist_name}).get('results') for tags in artist.get('musicinfo').get('tags') ]
+        if tags:
+            self.speak_dialog('search_artists_tags')
+        else:
+            return false
+
+    @intent_handler('search_albums_tags.intent')
+    def search_albums_tags(self, message):
+        album_name = message.data.get('album_name')
+        artist_name = message.data.get('artist_name')
+        tags = [ tags for artist in self.__get_albums_musicinfo__({'artist_name': artist_name, 'name': album_name}).get('results') for tags in artist.get('musicinfo').get('tags') ]
+        tags = list(set(tags))
+        if tags:
+            self.speak_dialog('search_albums_tags', {
+                'album_name': album_name,
+                'list': join_list(tags, 'and')
+            })
+        else:
+            return false
+
 def create_skill():
     return Jamendo_skill()
