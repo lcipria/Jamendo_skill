@@ -17,6 +17,10 @@ class Jamendo_skill(MycroftSkill):
     def on_settings_changed(self):
         self.client_id = self.settings.get('client_id', '6750d21f')
 
+    def __describe_album__(self, album):
+        by = self.translate('by')
+        return " ".join(( album.get('name'), by, album.get('artist_name')))
+
     def __get_generic__(self, url, payload):
         payload = {**payload, **{
             'client_id' : self.client_id,
@@ -151,9 +155,12 @@ class Jamendo_skill(MycroftSkill):
     @intent_handler('search_artists_tags.intent')
     def search_artists_tags(self, message):
         artist_name = message.data.get('artist_name')
-        tags = [ tags for artist in self.__get_artists_musicinfo__({'artist_name': artist_name}).get('results') for tags in artist.get('musicinfo').get('tags') ]
+        tags = [ tags for artist in self.__get_artists_musicinfo__({'name': artist_name}).get('results') for tags in artist.get('musicinfo').get('tags') ]
         if tags:
-            self.speak_dialog('search_artists_tags')
+            self.speak_dialog('search_artists_tags', {
+                'artist_name': artist_name,
+                'list': join_list(tags, 'and')
+            })
         else:
             return false
 
@@ -161,15 +168,19 @@ class Jamendo_skill(MycroftSkill):
     def search_albums_tags(self, message):
         album_name = message.data.get('album_name')
         artist_name = message.data.get('artist_name')
-        tags = [ tags for artist in self.__get_albums_musicinfo__({'artist_name': artist_name, 'name': album_name}).get('results') for tags in artist.get('musicinfo').get('tags') ]
-        tags = list(set(tags))
-        if tags:
-            self.speak_dialog('search_albums_tags', {
-                'album_name': album_name,
-                'list': join_list(tags, 'and')
-            })
+        albums = self.__get_albums_musicinfo__({'artist_name': artist_name, 'name': album_name}).get('results') # namesearch for fuzzy match?
+        if len(albums) == 0:
+            self.speak_dialog('no_albums')
         else:
-            return false
+            selected_album = self.ask_selection([ self.__describe_album__(x) for x in albums ], min_conf=0)
+            selected_album = [ x for x in albums if self.__describe_album__(x) == selected_album ][0]
+            self.speak_dialog('search_albums_tags', {
+                'album_name': selected_album.get('name'),
+                'artist_name': selected_album.get('artist_name'),
+                'list': join_list(
+                    list(set(selected_album.get("musicinfo").get("tags"))), "and"
+                )
+            })
 
 def create_skill():
     return Jamendo_skill()

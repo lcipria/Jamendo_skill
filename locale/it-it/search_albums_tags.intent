@@ -1,1 +1,2 @@
-quali sono i generi dell'album {name} (|di {artist_name})
+quali sono i generi dell'album {album_name} (|di {artist_name})
+che genere è l'album {album_name} (|di {artist_name})
