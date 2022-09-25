@@ -1,6 +1,8 @@
 from mycroft import MycroftSkill, intent_handler
 from mycroft.messagebus.message import Message
 from mycroft.util.format import join_list
+from mycroft.util import play_mp3
+from random import random
 import operator
 import requests
 import statistics
@@ -190,6 +192,18 @@ class Jamendo_skill(MycroftSkill):
             })
         else:
             self.speak_dialog('no_albums')
+
+    @intent_handler('play_random_track.intent')
+    def search_albums_tags(self, message):
+        tag = message.data.get('tag')
+        result = self.__get_tracks__({'audioformat': 'mp32', 'fullcount': 1, 'fuzzytags': tag, 'limit': 1})
+        fullcount = result.get('headers').get('results_fullcount')
+        tracks = self.__get_tracks__({'audioformat': 'mp32', 'fullcount': 1, 'fuzzytags': tag, 'limit': 1, 'offset': (fullcount * random())}).get('results')
+        if tracks:
+            self.speak_dialog('play_random_track', tracks[0])
+            play_mp3(tracks[0].get('audio'))
+        else:
+            self.speak_dialog('no_track')
 
 def create_skill():
     return Jamendo_skill()
